@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ANYONE Protocol Staking Dashboard</title>
+  <meta name="description" content="ANYONE Protocol staking dashboard for revenue sharing.">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" sizes="48x48">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="main-54m8r1s2.min.js" async></script>
+
+  <style>
+    :root {
+      --bg: #0a0b0d;
+      --surface: #111316;
+      --surface-2: #171a1e;
+      --border: rgba(255, 255, 255, 0.07);
+      --border-strong: rgba(255, 255, 255, 0.14);
+      --text: #e9ebee;
+      --muted: #8a919b;
+      --faint: #5b616a;
+      --accent: #00aeff;
+      --accent-hover: #33bdff;
+      --accent-ink: #03141f;
+      --radius: 14px;
+      --radius-sm: 10px;
+      --max: 1040px;
+      --gutter: clamp(16px, 4vw, 32px);
+    }
+
+    * { box-sizing: border-box; margin: 0; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      min-height: 100vh;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Single soft glow, nothing else in the background */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background: radial-gradient(900px 420px at 50% -120px, rgba(0, 174, 255, 0.10), transparent 70%);
+      pointer-events: none;
+    }
+
+    button, input { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* ---------- Layout ---------- */
+    .wrap {
+      width: 100%;
+      max-width: calc(var(--max) + var(--gutter) * 2);
+      margin: 0 auto;
+      padding: 0 var(--gutter);
+    }
+
+    /* ---------- Nav ---------- */
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+      border-bottom: 1px solid var(--border);
+    }
+    .nav img { height: 30px; width: auto; display: block; }
+
+    /* ---------- Buttons ---------- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 42px;
+      padding: 0 18px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.005em;
+      white-space: nowrap;
+      transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+    }
+    .btn-primary { background: var(--accent); color: var(--accent-ink); }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-ghost { background: transparent; border-color: var(--border-strong); color: var(--text); }
+    .btn-ghost:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-block { width: 100%; }
+
+    /* ---------- Header ---------- */
+    .hero {
+      padding: 56px 0 32px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 28px;
+    }
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-size: clamp(28px, 5vw, 40px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+    .hero p { margin-top: 10px; color: var(--muted); max-width: 420px; }
+
+    .stats { display: flex; gap: 12px; flex-wrap: wrap; }
+    .stat {
+      min-width: 150px;
+      padding: 14px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .stat .label { font-size: 12px; color: var(--muted); }
+    .stat .value { margin-top: 2px; font-size: 22px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .stat .value.accent { color: var(--accent); }
+
+    /* ---------- Cards ---------- */
+    .grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 16px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .card-title { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+    .card-sub { margin-top: 2px; font-size: 13px; color: var(--muted); }
+    .card-head { margin-bottom: 20px; }
+    .note { margin-top: 16px; font-size: 12.5px; color: var(--faint); }
+
+    /* ---------- Segmented control ---------- */
+    .seg {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 4px;
+      margin-bottom: 20px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .seg button {
+      height: 36px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+      transition: background-color .15s ease, color .15s ease;
+    }
+    .seg button[aria-selected="true"] { background: var(--surface-2); color: var(--text); box-shadow: 0 0 0 1px var(--border); }
+    .seg button:hover:not([aria-selected="true"]) { color: var(--text); }
+
+    /* ---------- Inputs ---------- */
+    .field-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 6px 6px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      transition: border-color .15s ease;
+    }
+    .field:focus-within { border-color: rgba(0, 174, 255, 0.55); }
+    .field input {
+      flex: 1;
+      min-width: 0;
+      height: 38px;
+      background: transparent;
+      border: 0;
+      outline: 0;
+      font-size: 18px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+    .field input::placeholder { color: var(--faint); }
+    .field input::-webkit-inner-spin-button,
+    .field input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .field input[type="number"] { -moz-appearance: textfield; }
+    .field .unit { font-size: 13px; color: var(--faint); font-weight: 500; }
+    .max {
+      height: 30px;
+      padding: 0 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      transition: color .15s ease, border-color .15s ease;
+    }
+    .max:hover { color: var(--accent); border-color: rgba(0, 174, 255, 0.5); }
+
+    .panel[hidden] { display: none; }
+    .panel .btn { margin-top: 16px; }
+
+    /* ---------- Rewards ---------- */
+    .reward-box {
+      padding: 22px 18px;
+      margin-bottom: 14px;
+      text-align: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .reward-box .label { font-size: 12px; color: var(--muted); }
+    .reward-box .amount {
+      margin-top: 4px;
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    /* ---------- Calculator ---------- */
+    .calc { margin-top: 16px; }
+    .calc-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .calc-input {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      height: 40px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .calc-input:focus-within { border-color: rgba(0, 174, 255, 0.55); }
+    .calc-input input {
+      width: 120px;
+      background: transparent;
+      border: 0;
+      outline: 0;
+      text-align: right;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .calc-input input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .calc-input input[type="number"] { -moz-appearance: textfield; }
+    .calc-input span { font-size: 13px; color: var(--faint); font-weight: 500; }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent) var(--fill, 1%), rgba(255,255,255,0.1) var(--fill, 1%));
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      border: 0;
+      box-shadow: 0 0 0 4px rgba(0, 174, 255, 0.28);
+      transition: box-shadow .15s ease;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      border: 0;
+      box-shadow: 0 0 0 4px rgba(0, 174, 255, 0.28);
+    }
+    input[type="range"]:hover::-webkit-slider-thumb { box-shadow: 0 0 0 6px rgba(0, 174, 255, 0.28); }
+    .range-scale {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 11.5px;
+      color: var(--faint);
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 22px;
+    }
+    .kpi {
+      padding: 14px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .kpi .label { font-size: 12px; color: var(--muted); }
+    .kpi .value {
+      margin-top: 4px;
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+    .kpi .value small { font-size: 12px; font-weight: 500; color: var(--faint); margin-left: 2px; }
+
+    footer {
+      padding: 36px 0 48px;
+      text-align: center;
+      font-size: 12.5px;
+      color: var(--faint);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      .kpis { grid-template-columns: repeat(2, 1fr); }
+      .hero { padding-top: 36px; }
+    }
+    @media (max-width: 520px) {
+      .card { padding: 18px; }
+      .stats { width: 100%; }
+      .stat { flex: 1; min-width: 0; }
+      .kpis { grid-template-columns: 1fr; }
+      .nav img { height: 26px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- Nav -->
+    <header class="nav">
+      <img src="anyone-text.png" alt="Anyone">
+      <button class="btn btn-ghost connect-btn" type="button">Connect wallet</button>
+    </header>
+
+    <main>
+      <!-- Header + stats -->
+      <section class="hero">
+        <div>
+          <div class="eyebrow">Staking</div>
+          <h1>Revenue sharing</h1>
+          <p>Stake $ANYONE and earn a share of protocol revenue. No lockup, withdraw any time.</p>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <div class="label">Total staked</div>
+            <div class="value">7.34M <span style="font-size:13px;color:var(--faint);font-weight:500">$ANYONE</span></div>
+          </div>
+          <div class="stat">
+            <div class="label">Current APR</div>
+            <div class="value accent">12.7%</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stake + Rewards -->
+      <section class="grid">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Manage stake</div>
+            <div class="card-sub">Stake to earn, or withdraw at any time.</div>
+          </div>
+
+          <div class="seg" role="tablist" aria-label="Stake actions">
+            <button type="button" role="tab" id="tab-stake" aria-selected="true" aria-controls="panel-stake">Stake</button>
+            <button type="button" role="tab" id="tab-unstake" aria-selected="false" aria-controls="panel-unstake">Withdraw</button>
+          </div>
+
+          <div class="panel" id="panel-stake" role="tabpanel" aria-labelledby="tab-stake">
+            <label class="field-label" for="stake"><span>Amount to stake</span></label>
+            <div class="field">
+              <input id="stake" type="number" min="1e-18" step="1e-18" name="stake" placeholder="0.00" inputmode="decimal">
+              <span class="unit">$ANYONE</span>
+              <button class="max connectButton" type="button">MAX</button>
+            </div>
+            <button class="btn btn-primary btn-block connect-btn" type="button">Stake</button>
+          </div>
+
+          <div class="panel" id="panel-unstake" role="tabpanel" aria-labelledby="tab-unstake" hidden>
+            <label class="field-label" for="unstake"><span>Amount to withdraw</span></label>
+            <div class="field">
+              <input id="unstake" type="number" step="1e-18" name="amount" placeholder="0.00" inputmode="decimal">
+              <span class="unit">$ANYONE</span>
+              <button class="max connectButton" type="button">MAX</button>
+            </div>
+            <button class="btn btn-ghost btn-block connect-btn" type="button">Withdraw</button>
+          </div>
+
+          <p class="note">No lockup period for any amount of staked $ANYONE.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Your rewards</div>
+            <div class="card-sub">Connect a wallet to see what you've earned.</div>
+          </div>
+
+          <div class="reward-box">
+            <div class="label">Claimable</div>
+            <div class="amount" id="rewardsValue">–</div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-primary connectButton" type="button" disabled>Compound</button>
+            <button class="btn btn-ghost connectButton" type="button" disabled>Withdraw</button>
+          </div>
+
+          <p class="note">Compounding uses your rewards to buy and stake additional $ANYONE.</p>
+        </div>
+      </section>
+
+      <!-- Rewards calculator -->
+      <section class="card calc" id="apwBox" data-apw-slider aria-label="$ANYONE rewards calculator">
+        <div class="calc-top">
+          <div>
+            <div class="card-title">Rewards calculator</div>
+            <div class="card-sub">Estimate earnings at the current 12.7% rate.</div>
+          </div>
+          <label class="calc-input">
+            <input id="apwNumber" type="number" min="0" max="1000000" step="1" value="10000" inputmode="numeric" aria-label="Amount of $ANYONE">
+            <span>$ANYONE</span>
+          </label>
+        </div>
+
+        <input id="apwSlider" type="range" min="0" max="1000000" step="1" value="10000" aria-label="Amount of $ANYONE to stake">
+        <div class="range-scale"><span>0</span><span>250K</span><span>500K</span><span>750K</span><span>1M</span></div>
+
+        <div class="kpis">
+          <div class="kpi"><div class="label">Daily</div><div class="value" id="apwDaily">–</div></div>
+          <div class="kpi"><div class="label">Monthly</div><div class="value" id="apwMonthly">–</div></div>
+          <div class="kpi"><div class="label">Yearly</div><div class="value" id="apwYearly">–</div></div>
+          <div class="kpi"><div class="label">Balance after 1 year</div><div class="value" id="apwEnd">–</div></div>
+        </div>
+      </section>
+    </main>
+
+    <footer>Projections are estimates and not guaranteed. Rates may change.</footer>
+  </div>
+
+  <script>
+    // ---- Stake / Withdraw tabs ----
+    (function () {
+      var tabs = [
+        { btn: document.getElementById('tab-stake'), panel: document.getElementById('panel-stake') },
+        { btn: document.getElementById('tab-unstake'), panel: document.getElementById('panel-unstake') }
+      ];
+      tabs.forEach(function (t) {
+        t.btn.addEventListener('click', function () {
+          tabs.forEach(function (o) {
+            var on = o === t;
+            o.btn.setAttribute('aria-selected', on ? 'true' : 'false');
+            o.panel.hidden = !on;
+          });
+        });
+      });
+    })();
+
+    // ---- Rewards calculator ----
+    (function () {
+      var RATE = 0.127;
+      var fmt = function (n) {
+        return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(n);
+      };
+      var slider = document.getElementById('apwSlider');
+      var number = document.getElementById('apwNumber');
+      var els = {
+        daily: document.getElementById('apwDaily'),
+        monthly: document.getElementById('apwMonthly'),
+        yearly: document.getElementById('apwYearly'),
+        end: document.getElementById('apwEnd')
+      };
+      var unit = '<small>$ANYONE</small>';
+      var max = +slider.max;
+
+      function render(v, source) {
+        var a = Math.max(0, Math.min(max, +v || 0));
+        if (source !== 'slider') slider.value = a;
+        if (source !== 'number') number.value = a;
+        slider.style.setProperty('--fill', (a / max * 100) + '%');
+
+        els.daily.innerHTML = fmt(a * (Math.pow(1 + RATE, 1 / 365) - 1)) + unit;
+        els.monthly.innerHTML = fmt(a * (Math.pow(1 + RATE, 1 / 12) - 1)) + unit;
+        els.yearly.innerHTML = fmt(a * RATE) + unit;
+        els.end.innerHTML = fmt(a * (1 + RATE)) + unit;
+      }
+
+      slider.addEventListener('input', function (e) { render(e.target.value, 'slider'); });
+      number.addEventListener('input', function (e) { render(e.target.value, 'number'); });
+      render(slider.value);
+    })();
+
+    // ---- Wallet hooks: keep any anchors inert and make sure every action button opens the connect flow ----
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('body a').forEach(function (a) {
+        a.removeAttribute('href');
+        a.classList.add('connectButton');
+      });
+    });
+  </script>
+</body>
+</html>
